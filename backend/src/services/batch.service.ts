@@ -24,7 +24,7 @@ export async function processBatches(rows: Record<string, string>[]) {
   let failedBatches = 0;
 
   for (let i = 0; i < batches.length; i++) {
-    const batch = batches[i];
+    const batch = batches[i]!;
     let attempt = 0;
     let success = false;
 
