@@ -3,7 +3,7 @@
 import { useCallback, useState } from "react";
 import Papa from "papaparse";
 
-export type CsvRow = Record<string, string>;
+import type { CsvRow } from "@/lib/types";
 
 interface CsvUploaderProps {
   onParsed: (rows: CsvRow[], fileName: string) => void;

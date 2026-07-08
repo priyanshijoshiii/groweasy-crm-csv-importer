@@ -7,7 +7,7 @@ import {
   createColumnHelper,
 } from "@tanstack/react-table";
 import { useMemo } from "react";
-import type { CsvRow } from "./CsvUploader";
+import type { CsvRow } from "@/lib/types";
 
 interface PreviewTableProps {
   rows: CsvRow[];
