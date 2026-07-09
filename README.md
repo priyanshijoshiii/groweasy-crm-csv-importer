@@ -2,7 +2,6 @@
 
 An intelligent CSV importer that accepts leads from *any* CSV layout — Facebook Lead Exports, Google Ads Exports, Excel sheets, real estate CRM exports, or manually created spreadsheets — and uses an LLM to map them into a standardized CRM format.
 
-Built for GrowEasy's Software Developer assignment.
 
 ## How It Works (Flow)
 
@@ -146,9 +145,5 @@ Tested against differently-shaped sample CSVs:
 - [ ] Docker setup
 - [ ] Unit tests
 
-*(Check off as implemented before submission.)*
 
-## Submission
-- **Hosted app:** _add Vercel URL here_
-- **GitHub repo:** _add repo URL here_
-- **Position applied for:** Software Developer Intern
+

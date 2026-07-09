@@ -1,11 +1,12 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import CsvUploader from "@/components/CsvUploader";
 import PreviewTable from "@/components/PreviewTable";
 import ResultTable from "@/components/ResultTable";
 import { extractCrmRecords } from "@/lib/api";
 import type { CsvRow, ExtractResponse } from "@/lib/types";
+
 
 
 export default function Home() {
@@ -44,9 +45,19 @@ export default function Home() {
     setError(null);
   };
 
+  useEffect(() => {
+    const savedTheme = localStorage.getItem("theme");
+    if (savedTheme === "dark") {
+      setIsDark(true);
+      document.documentElement.classList.add("dark");
+    }
+  }, []);
+
   const toggleDarkMode = () => {
-    setIsDark(!isDark);
+    const newIsDark = !isDark;
+    setIsDark(newIsDark);
     document.documentElement.classList.toggle("dark");
+    localStorage.setItem("theme", newIsDark ? "dark" : "light");
   };
 
   return (
