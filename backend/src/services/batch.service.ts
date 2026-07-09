@@ -3,7 +3,7 @@ import { CrmRecord } from "../schemas/crmRecord.schema";
 
 const BATCH_SIZE = 15;
 const MAX_RETRIES = 4;
-const DELAY_BETWEEN_BATCHES_MS = 2500;
+const DELAY_BETWEEN_BATCHES_MS = 4000;
 
 function chunkArray<T>(arr: T[], size: number): T[][] {
   const chunks: T[][] = [];
