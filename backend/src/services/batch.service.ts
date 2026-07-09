@@ -19,7 +19,7 @@ function sleep(ms: number) {
 
 function extractRetryDelaySeconds(errorMessage: string): number | null {
   const match = errorMessage.match(/try again in ([\d.]+)s/i);
-  return match ? parseFloat(match[1]) : null;
+  return match ? parseFloat(match[1]!) : null;
 }
 
 export async function processBatches(rows: Record<string, string>[]) {
