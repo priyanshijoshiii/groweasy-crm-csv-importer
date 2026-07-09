@@ -1,9 +1,9 @@
 import { extractCrmRecords } from "./ai.service";
 import { CrmRecord } from "../schemas/crmRecord.schema";
 
-const BATCH_SIZE = 10;
+const BATCH_SIZE = 15;
 const MAX_RETRIES = 4;
-const DELAY_BETWEEN_BATCHES_MS = 3000;
+const DELAY_BETWEEN_BATCHES_MS = 2500;
 
 function chunkArray<T>(arr: T[], size: number): T[][] {
   const chunks: T[][] = [];
@@ -15,6 +15,11 @@ function chunkArray<T>(arr: T[], size: number): T[][] {
 
 function sleep(ms: number) {
   return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+function extractRetryDelaySeconds(errorMessage: string): number | null {
+  const match = errorMessage.match(/try again in ([\d.]+)s/i);
+  return match ? parseFloat(match[1]) : null;
 }
 
 export async function processBatches(rows: Record<string, string>[]) {
@@ -36,18 +41,20 @@ export async function processBatches(rows: Record<string, string>[]) {
         success = true;
       } catch (err) {
         attempt++;
-        console.error(`Batch ${i + 1}/${batches.length} attempt ${attempt} failed:`, err instanceof Error ? err.message : err);
+        const message = err instanceof Error ? err.message : String(err);
+        console.error(`Batch ${i + 1}/${batches.length} attempt ${attempt} failed:`, message);
+
         if (attempt >= MAX_RETRIES) {
           failedBatches++;
           totalSkipped += batch.length;
         } else {
-          // Exponential backoff: wait longer on each retry to let the rate limit window clear
-          await sleep(5000 * attempt);
+          const retryDelay = extractRetryDelaySeconds(message);
+          const waitMs = retryDelay ? (retryDelay + 1) * 1000 : 8000 * attempt;
+          await sleep(waitMs);
         }
       }
     }
 
-    // Pace ourselves between batches, even on success, to stay under TPM limits
     if (i < batches.length - 1) {
       await sleep(DELAY_BETWEEN_BATCHES_MS);
     }
