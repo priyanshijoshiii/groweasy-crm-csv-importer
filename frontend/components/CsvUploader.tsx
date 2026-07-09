@@ -22,6 +22,12 @@ export default function CsvUploader({ onParsed }: CsvUploaderProps) {
         return;
       }
 
+      const MAX_FILE_SIZE_MB = 5;
+      if (file.size > MAX_FILE_SIZE_MB * 1024 * 1024) {
+        setError(`File is too large. Please upload a CSV under ${MAX_FILE_SIZE_MB}MB.`);
+        return;
+      }
+
       Papa.parse<CsvRow>(file, {
         header: true,
         skipEmptyLines: true,
