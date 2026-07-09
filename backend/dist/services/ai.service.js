@@ -1,5 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
+exports.validateAndEnforceRecords = validateAndEnforceRecords;
 exports.extractCrmRecords = extractCrmRecords;
 const crmRecord_schema_1 = require("../schemas/crmRecord.schema");
 const SYSTEM_PROMPT = `You are a CRM data extraction engine for GrowEasy.
@@ -33,6 +34,32 @@ RULES:
 5. Do not introduce raw line breaks inside any field value — escape them as \\n if needed.
 
 Return a JSON array, one object per valid input row, in the same order as the input.`;
+function validateAndEnforceRecords(parsed, rows) {
+    const validRecords = [];
+    parsed.forEach((item, index) => {
+        const validation = crmRecord_schema_1.crmRecordSchema.safeParse(item);
+        if (!validation.success)
+            return;
+        const record = validation.data;
+        const hasEmail = record.email && record.email.trim() !== "";
+        const hasMobile = record.mobile_without_country_code &&
+            record.mobile_without_country_code.trim() !== "";
+        if (!hasEmail && !hasMobile) {
+            return;
+        }
+        if (record.data_source) {
+            const originalRow = rows[index];
+            const originalValues = originalRow
+                ? Object.values(originalRow).join(" ").toLowerCase()
+                : "";
+            if (!originalValues.includes(record.data_source.toLowerCase())) {
+                record.data_source = "";
+            }
+        }
+        validRecords.push(record);
+    });
+    return validRecords;
+}
 async function extractCrmRecords(rows) {
     const userPrompt = `Here are the raw CSV rows:\n${JSON.stringify(rows)}`;
     const cerebrasResponse = await fetch("https://api.cerebras.ai/v1/chat/completions", {
@@ -70,29 +97,7 @@ async function extractCrmRecords(rows) {
     if (!Array.isArray(parsed)) {
         throw new Error("AI response was not a JSON array");
     }
-    const validRecords = [];
-    parsed.forEach((item, index) => {
-        const validation = crmRecord_schema_1.crmRecordSchema.safeParse(item);
-        if (!validation.success)
-            return;
-        const record = validation.data;
-        const hasEmail = record.email && record.email.trim() !== "";
-        const hasMobile = record.mobile_without_country_code &&
-            record.mobile_without_country_code.trim() !== "";
-        if (!hasEmail && !hasMobile) {
-            return;
-        }
-        if (record.data_source) {
-            const originalRow = rows[index];
-            const originalValues = originalRow
-                ? Object.values(originalRow).join(" ").toLowerCase()
-                : "";
-            if (!originalValues.includes(record.data_source.toLowerCase())) {
-                record.data_source = "";
-            }
-        }
-        validRecords.push(record);
-    });
+    const validRecords = validateAndEnforceRecords(parsed, rows);
     return {
         records: validRecords,
         skippedCount: rows.length - validRecords.length,

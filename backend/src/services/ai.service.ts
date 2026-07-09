@@ -32,6 +32,43 @@ RULES:
 
 Return a JSON array, one object per valid input row, in the same order as the input.`;
 
+export function validateAndEnforceRecords(
+  parsed: unknown[],
+  rows: Record<string, string>[]
+): CrmRecord[] {
+  const validRecords: CrmRecord[] = [];
+
+  parsed.forEach((item, index) => {
+    const validation = crmRecordSchema.safeParse(item);
+    if (!validation.success) return;
+
+    const record = validation.data;
+
+    const hasEmail = record.email && record.email.trim() !== "";
+    const hasMobile =
+      record.mobile_without_country_code &&
+      record.mobile_without_country_code.trim() !== "";
+
+    if (!hasEmail && !hasMobile) {
+      return;
+    }
+
+    if (record.data_source) {
+      const originalRow = rows[index];
+      const originalValues = originalRow
+        ? Object.values(originalRow).join(" ").toLowerCase()
+        : "";
+      if (!originalValues.includes(record.data_source.toLowerCase())) {
+        record.data_source = "";
+      }
+    }
+
+    validRecords.push(record);
+  });
+
+  return validRecords;
+}
+
 export async function extractCrmRecords(
   rows: Record<string, string>[]
 ): Promise<{ records: CrmRecord[]; skippedCount: number }> {
@@ -77,35 +114,7 @@ export async function extractCrmRecords(
     throw new Error("AI response was not a JSON array");
   }
 
-  const validRecords: CrmRecord[] = [];
-
-  parsed.forEach((item, index) => {
-    const validation = crmRecordSchema.safeParse(item);
-    if (!validation.success) return;
-
-    const record = validation.data;
-
-    const hasEmail = record.email && record.email.trim() !== "";
-    const hasMobile =
-      record.mobile_without_country_code &&
-      record.mobile_without_country_code.trim() !== "";
-
-    if (!hasEmail && !hasMobile) {
-      return;
-    }
-
-    if (record.data_source) {
-      const originalRow = rows[index];
-      const originalValues = originalRow
-        ? Object.values(originalRow).join(" ").toLowerCase()
-        : "";
-      if (!originalValues.includes(record.data_source.toLowerCase())) {
-        record.data_source = "";
-      }
-    }
-
-    validRecords.push(record);
-  });
+  const validRecords = validateAndEnforceRecords(parsed, rows);
 
   return {
     records: validRecords,
