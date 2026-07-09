@@ -1,4 +1,9 @@
-export declare function processBatches(rows: Record<string, string>[]): Promise<{
+export declare const progressStore: Map<string, {
+    current: number;
+    total: number;
+    done: boolean;
+}>;
+export declare function processBatches(rows: Record<string, string>[], jobId?: string): Promise<{
     imported: {
         created_at: string;
         name: string;

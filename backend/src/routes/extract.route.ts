@@ -1,8 +1,9 @@
 import { Router } from "express";
-import { handleExtract } from "../controllers/extract.controller";
+import { handleExtract, handleProgress } from "../controllers/extract.controller";
 
 const router = Router();
 
 router.post("/", handleExtract);
+router.get("/progress/:jobId", handleProgress);
 
 export default router;

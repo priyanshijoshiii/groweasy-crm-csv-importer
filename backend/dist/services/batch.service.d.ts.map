@@ -1,1 +1,1 @@
-{"version":3,"file":"batch.service.d.ts","sourceRoot":"","sources":["../../src/services/batch.service.ts"],"names":[],"mappings":"AAwBA,wBAAsB,cAAc,CAAC,IAAI,EAAE,MAAM,CAAC,MAAM,EAAE,MAAM,CAAC,EAAE;;;;;;;;;;;;;;;;;;;;;GA4ClE"}
+{"version":3,"file":"batch.service.d.ts","sourceRoot":"","sources":["../../src/services/batch.service.ts"],"names":[],"mappings":"AAQA,eAAO,MAAM,aAAa;aAA8B,MAAM;WAAS,MAAM;UAAQ,OAAO;EAAK,CAAC;AAmBlG,wBAAsB,cAAc,CAAC,IAAI,EAAE,MAAM,CAAC,MAAM,EAAE,MAAM,CAAC,EAAE,EAAE,KAAK,CAAC,EAAE,MAAM;;;;;;;;;;;;;;;;;;;;;GA0DlF"}

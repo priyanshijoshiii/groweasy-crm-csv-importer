@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import CsvUploader from "@/components/CsvUploader";
 import PreviewTable from "@/components/PreviewTable";
 import ResultTable from "@/components/ResultTable";
-import { extractCrmRecords } from "@/lib/api";
+import { extractCrmRecords, getProgress } from "@/lib/api";
 import type { CsvRow, ExtractResponse } from "@/lib/types";
 
 
@@ -16,6 +16,7 @@ export default function Home() {
   const [result, setResult] = useState<ExtractResponse | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [isDark, setIsDark] = useState(false);
+  const [progress, setProgress] = useState<{ current: number; total: number } | null>(null);
 
   const handleParsed = (parsedRows: CsvRow[], name: string) => {
     setRows(parsedRows);
@@ -27,14 +28,32 @@ export default function Home() {
   const handleConfirm = async () => {
     setIsProcessing(true);
     setError(null);
+    setProgress(null);
+
+    const jobId = crypto.randomUUID();
+
+    const pollInterval = setInterval(async () => {
+      try {
+        const prog = await getProgress(jobId);
+        setProgress({ current: prog.current, total: prog.total });
+        if (prog.done) {
+          clearInterval(pollInterval);
+        }
+      } catch {
+        // Progress endpoint might 404 briefly before the job starts — ignore and keep polling
+      }
+    }, 1500);
+
     try {
-      const response = await extractCrmRecords(rows);
+      const response = await extractCrmRecords(rows, jobId);
       setResult(response);
     } catch (err) {
       setError("Something went wrong while processing your CSV. Please try again.");
       console.error(err);
     } finally {
+      clearInterval(pollInterval);
       setIsProcessing(false);
+      setProgress(null);
     }
   };
 
@@ -99,7 +118,11 @@ export default function Home() {
               disabled={isProcessing}
               className="px-5 py-2 rounded-lg bg-blue-600 text-white hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              {isProcessing ? "Processing with AI..." : "Confirm Import"}
+              {isProcessing
+                ? progress
+                  ? `Processing batch ${progress.current} of ${progress.total}...`
+                  : "Starting..."
+                : "Confirm Import"}
             </button>
           </div>
         </>

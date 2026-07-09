@@ -136,6 +136,10 @@ Tested against differently-shaped sample CSVs:
 - Records containing multiple emails/phone numbers in a single field
 - Records missing both email and mobile (expected to be skipped)
 
+## Known Limitations
+- Very large CSVs (500+ rows) may take longer to process, since AI batches are intentionally paced to respect the free-tier LLM API's rate limits. The architecture supports arbitrary file sizes — processing time scales with API constraints, not application design.
+- The current LLM provider (Cerebras, free tier) has a 30 requests/minute cap; batch pacing (4-second intervals) is tuned to stay safely under this.
+
 ## Bonus Features Implemented
 - [ ] Drag & drop upload
 - [ ] Progress indicators during AI processing
