@@ -35,16 +35,16 @@ Return a JSON array, one object per valid input row, in the same order as the in
 export async function extractCrmRecords(
   rows: Record<string, string>[]
 ): Promise<{ records: CrmRecord[]; skippedCount: number }> {
-  const userPrompt = `Here are the raw CSV rows:\n${JSON.stringify(rows, null, 2)}`;
+  const userPrompt = `Here are the raw CSV rows:\n${JSON.stringify(rows)}`;
 
-  const groqResponse = await fetch("https://api.groq.com/openai/v1/chat/completions", {
+  const cerebrasResponse = await fetch("https://api.cerebras.ai/v1/chat/completions", {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
-      Authorization: `Bearer ${process.env.GROQ_API_KEY}`,
+      Authorization: `Bearer ${process.env.CEREBRAS_API_KEY}`,
     },
     body: JSON.stringify({
-      model: "llama-3.1-8b-instant",
+      model: "gpt-oss-120b",
       messages: [
         { role: "system", content: SYSTEM_PROMPT },
         { role: "user", content: userPrompt },
@@ -53,13 +53,13 @@ export async function extractCrmRecords(
     }),
   });
 
-  if (!groqResponse.ok) {
-    const errText = await groqResponse.text();
-    throw new Error(`Groq API error (${groqResponse.status}): ${errText}`);
+  if (!cerebrasResponse.ok) {
+    const errText = await cerebrasResponse.text();
+    throw new Error(`Cerebras API error (${cerebrasResponse.status}): ${errText}`);
   }
 
-  const groqData = await groqResponse.json();
-  const responseText: string = groqData.choices?.[0]?.message?.content?.trim() || "";
+  const cerebrasData = await cerebrasResponse.json();
+  const responseText: string = cerebrasData.choices?.[0]?.message?.content?.trim() || "";
 
   const cleaned = responseText
     .replace(/^```json\s*/i, "")
@@ -77,7 +77,7 @@ export async function extractCrmRecords(
     throw new Error("AI response was not a JSON array");
   }
 
-const validRecords: CrmRecord[] = [];
+  const validRecords: CrmRecord[] = [];
 
   parsed.forEach((item, index) => {
     const validation = crmRecordSchema.safeParse(item);
@@ -85,19 +85,15 @@ const validRecords: CrmRecord[] = [];
 
     const record = validation.data;
 
-    // Enforce the skip rule in code, not just via prompt instruction.
     const hasEmail = record.email && record.email.trim() !== "";
     const hasMobile =
       record.mobile_without_country_code &&
       record.mobile_without_country_code.trim() !== "";
 
     if (!hasEmail && !hasMobile) {
-      return; // skip records with neither email nor mobile
+      return;
     }
 
-    // Enforce data_source accuracy in code: only keep it if that exact
-    // value genuinely appears somewhere in the original row's data.
-    // Otherwise the AI is pattern-matching/guessing — blank it out.
     if (record.data_source) {
       const originalRow = rows[index];
       const originalValues = originalRow
@@ -115,4 +111,4 @@ const validRecords: CrmRecord[] = [];
     records: validRecords,
     skippedCount: rows.length - validRecords.length,
   };
-}  
+}
