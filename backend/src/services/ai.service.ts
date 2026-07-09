@@ -10,7 +10,7 @@ Each output object must have exactly these fields:
 - created_at: lead creation date, must be parseable by JavaScript's new Date()
 - name: lead name
 - email: primary email
-- country_code: country code (e.g. "+91")
+- country_code: the country code if present in the source phone number (e.g. "+91"). If a phone number includes a country code prefix (like +91, +1, 91-, etc.), extract it separately here and put ONLY the remaining digits in mobile_without_country_code. If no country code is present in the source, leave this blank.
 - mobile_without_country_code: mobile number without the country code
 - company: company name
 - city: city
@@ -19,7 +19,7 @@ Each output object must have exactly these fields:
 - lead_owner: lead owner
 - crm_status: MUST be exactly one of: "GOOD_LEAD_FOLLOW_UP", "DID_NOT_CONNECT", "BAD_LEAD", "SALE_DONE", or "" if unclear
 - crm_note: remarks, follow-up notes, extra phone numbers, extra emails, or any useful info that doesn't fit elsewhere
-- data_source: ONLY set this if the input data explicitly contains a recognizable source name (like a column literally named "source", "lead source", "campaign", or similar, containing one of these exact values). MUST be exactly one of: "leads_on_demand", "meridian_tower", "eden_park", "varah_swamy", "sarjapur_plots". If there is NO explicit source information in the input row, you MUST leave this as "" (empty string). NEVER guess or assume a data_source value.
+- data_source: This field maps to GrowEasy's specific internal project names. ONLY set this if a column value is an EXACT, LITERAL match (case-insensitive) to one of: "leads_on_demand", "meridian_tower", "eden_park", "varah_swamy", "sarjapur_plots". Campaign names, ad names, or form names that merely CONTAIN similar-sounding words (e.g. an ad called "Eden Park Promo") are NOT matches — do not infer or guess based on partial text similarity. If no column value is an exact match to the list, you MUST leave this as "" (empty string).
 - possession_time: property possession time, if present
 - description: additional description
 
@@ -79,25 +79,37 @@ export async function extractCrmRecords(
 
 const validRecords: CrmRecord[] = [];
 
-  for (const item of parsed) {
+  parsed.forEach((item, index) => {
     const validation = crmRecordSchema.safeParse(item);
-    if (!validation.success) continue;
+    if (!validation.success) return;
 
     const record = validation.data;
 
-    // Enforce the skip rule in code, not just via prompt instruction —
-    // don't trust the AI alone for a business-critical rule.
+    // Enforce the skip rule in code, not just via prompt instruction.
     const hasEmail = record.email && record.email.trim() !== "";
     const hasMobile =
       record.mobile_without_country_code &&
       record.mobile_without_country_code.trim() !== "";
 
     if (!hasEmail && !hasMobile) {
-      continue; // skip records with neither email nor mobile
+      return; // skip records with neither email nor mobile
+    }
+
+    // Enforce data_source accuracy in code: only keep it if that exact
+    // value genuinely appears somewhere in the original row's data.
+    // Otherwise the AI is pattern-matching/guessing — blank it out.
+    if (record.data_source) {
+      const originalRow = rows[index];
+      const originalValues = originalRow
+        ? Object.values(originalRow).join(" ").toLowerCase()
+        : "";
+      if (!originalValues.includes(record.data_source.toLowerCase())) {
+        record.data_source = "";
+      }
     }
 
     validRecords.push(record);
-  }
+  });
 
   return {
     records: validRecords,
