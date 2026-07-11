@@ -18,7 +18,13 @@ export const dataSourceEnum = z.enum([
 export const crmRecordSchema = z.object({
   created_at: z.string().optional().default(""),
   name: z.string().optional().default(""),
-  email: z.string().optional().default(""),
+  email: z
+  .string()
+  .optional()
+  .default("")
+  .refine((val) => val === "" || z.string().email().safeParse(val).success, {
+    message: "Invalid email format",
+  }),
   country_code: z.string().optional().default(""),
   mobile_without_country_code: z.string().optional().default(""),
   company: z.string().optional().default(""),
