@@ -2,7 +2,6 @@
 
 An intelligent CSV importer that accepts leads from *any* CSV layout — Facebook Lead Exports, Google Ads Exports, Excel sheets, real estate CRM exports, or manually created spreadsheets — and uses an LLM to map them into a standardized CRM format.
 
-
 ## How It Works (Flow)
 
 1. **Upload** — User uploads a CSV via drag & drop or file picker (max 5MB).
@@ -33,6 +32,8 @@ Result table (virtualized)
 | Containerization | Docker + Docker Compose |
 | Deployment | Vercel (frontend) + Railway (backend) |
 
+### Why a separate Express backend instead of Next.js API routes?
+The assignment's tech stack explicitly lists Node.js + Express for the backend. While Next.js API routes would also satisfy the functional requirements (and are themselves Node.js under the hood), a standalone Express service was built to match the stated stack precisely, deployed independently on Railway.
 
 ### Why Cerebras over OpenAI/Gemini/Claude?
 Cerebras offers a genuinely free tier (no credit card) with strong throughput for structured JSON extraction tasks, making it well-suited for a batch-processing workload under free-tier constraints. The architecture is provider-agnostic — swapping to any OpenAI-compatible endpoint (OpenAI, Groq, etc.) requires changing only the API endpoint and model name in `backend/src/services/ai.service.ts`.
@@ -214,4 +215,5 @@ Tested against multiple differently-shaped sample CSVs:
 ## Known Limitations
 - Very large CSVs (500+ rows) may take longer to process, since AI batches are intentionally paced to respect the free-tier LLM API's rate limits (requests-per-minute caps). The architecture supports arbitrary file sizes — processing time scales with API constraints, not application design. A paid API tier would remove this constraint with no code changes beyond adjusting batch pacing.
 - The `data_source` field relies on an exact literal match between the AI's suggestion and the original row's raw text, enforced in code as a safety net against LLM hallucination. This is intentionally conservative — it may occasionally leave `data_source` blank in edge cases where a genuine match exists but is phrased very differently in the source data.
-
+- Progress tracking (`/api/extract/progress/:jobId`) uses an in-memory store on the server. This is sufficient for this assignment's single-instance deployment, but would not survive a server restart or scale correctly across multiple backend instances in a production multi-host setup — a production version would use Redis or similar shared state instead.
+- The `/api/extract` endpoint accepts a maximum of 1000 rows per request and is rate-limited (20 requests per 15 minutes per IP) to protect the underlying metered LLM API key.
