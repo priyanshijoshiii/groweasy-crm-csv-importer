@@ -8,7 +8,8 @@ import {
 } from "@tanstack/react-table";
 import type { CrmRecord } from "@/lib/types";
 import { useVirtualizer } from "@tanstack/react-virtual";
-import { useMemo, useRef } from "react";
+import { useMemo, useRef ,useState } from "react";
+
 
 interface ResultTableProps {
   records: CrmRecord[];
@@ -40,6 +41,19 @@ export default function ResultTable({
 }: ResultTableProps) {
   const columnHelper = createColumnHelper<CrmRecord>();
   const tableContainerRef = useRef<HTMLDivElement>(null);
+  const [searchQuery, setSearchQuery] = useState("");
+
+  const filteredRecords = useMemo(() => {
+    if (!searchQuery.trim()) return records;
+    const query = searchQuery.toLowerCase();
+    return records.filter(
+      (r) =>
+        r.name.toLowerCase().includes(query) ||
+        r.email.toLowerCase().includes(query) ||
+        r.mobile_without_country_code.toLowerCase().includes(query) ||
+        r.company.toLowerCase().includes(query)
+    );
+  }, [records, searchQuery]);
 
   const columns = useMemo(
     () => [
@@ -59,7 +73,7 @@ export default function ResultTable({
   );
 
   const table = useReactTable({
-    data: records,
+    data: filteredRecords,
     columns,
     getCoreRowModel: getCoreRowModel(),
   });
@@ -91,6 +105,23 @@ export default function ResultTable({
           {totalSkipped} Skipped
         </div>
       </div>
+
+      <div className="flex gap-4 mb-4">
+        <div className="px-4 py-2 rounded-lg bg-green-50 dark:bg-green-950 text-green-700 dark:text-green-300 text-sm font-medium">
+          {totalImported} Imported
+        </div>
+        <div className="px-4 py-2 rounded-lg bg-red-50 dark:bg-red-950 text-red-700 dark:text-red-300 text-sm font-medium">
+          {totalSkipped} Skipped
+        </div>
+      </div>
+
+      <input
+        type="text"
+        placeholder="Search by name, email, mobile, or company..."
+        value={searchQuery}
+        onChange={(e) => setSearchQuery(e.target.value)}
+        className="w-full mb-4 px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900 text-gray-700 dark:text-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+      />
 
       <div className="border rounded-xl overflow-hidden">
         <div ref={tableContainerRef} className="overflow-auto max-h-[500px]">

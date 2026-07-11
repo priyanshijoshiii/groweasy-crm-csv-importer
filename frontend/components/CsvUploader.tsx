@@ -88,6 +88,16 @@ export default function CsvUploader({ onParsed }: CsvUploaderProps) {
           or click to browse
         </p>
       </div>
+      <p className="text-xs text-gray-400 text-center mt-3">
+        Not sure about the format?{" "}
+        <a
+          href="/sample-crm-template.csv"
+          download
+          className="text-blue-500 hover:underline"
+         >
+          Download Sample CSV Template
+        </a>
+      </p>
       {error && (
         <p className="text-red-500 text-sm mt-3 text-center">{error}</p>
       )}
