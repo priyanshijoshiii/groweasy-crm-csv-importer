@@ -50,7 +50,7 @@ describe("validateAndEnforceRecords", () => {
     ];
     const rows = [{ Email: "a@example.com", Campaign: "Summer Sale" }];
     const result = validateAndEnforceRecords(parsed, rows);
-    expect(result[0].data_source).toBe("");
+    expect(result[0]!.data_source).toBe("");
   });
 
   it("keeps data_source if it genuinely appears in the original row", () => {
@@ -59,7 +59,7 @@ describe("validateAndEnforceRecords", () => {
     ];
     const rows = [{ Email: "a@example.com", Source: "eden_park" }];
     const result = validateAndEnforceRecords(parsed, rows);
-    expect(result[0].data_source).toBe("eden_park");
+    expect(result[0]!.data_source).toBe("eden_park");
   });
 
   it("rejects a record that fails schema validation", () => {
