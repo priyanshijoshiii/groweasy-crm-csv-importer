@@ -136,6 +136,7 @@ export default function Home() {
         <>
           <ResultTable
             records={result.imported}
+            skipped={result.skipped}
             totalImported={result.totalImported}
             totalSkipped={result.totalSkipped}
           />

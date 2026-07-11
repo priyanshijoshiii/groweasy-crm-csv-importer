@@ -32,15 +32,26 @@ RULES:
 
 Return a JSON array, one object per valid input row, in the same order as the input.`;
 
+export interface SkippedRecord {
+  row: Record<string, string>;
+  reason: string;
+}
+
 export function validateAndEnforceRecords(
   parsed: unknown[],
   rows: Record<string, string>[]
-): CrmRecord[] {
+): { validRecords: CrmRecord[]; skipped: SkippedRecord[] } {
   const validRecords: CrmRecord[] = [];
+  const skipped: SkippedRecord[] = [];
 
   parsed.forEach((item, index) => {
+    const originalRow = rows[index] || {};
     const validation = crmRecordSchema.safeParse(item);
-    if (!validation.success) return;
+
+    if (!validation.success) {
+      skipped.push({ row: originalRow, reason: "AI response did not match expected format" });
+      return;
+    }
 
     const record = validation.data;
 
@@ -50,14 +61,12 @@ export function validateAndEnforceRecords(
       record.mobile_without_country_code.trim() !== "";
 
     if (!hasEmail && !hasMobile) {
+      skipped.push({ row: originalRow, reason: "No email or mobile number found" });
       return;
     }
 
     if (record.data_source) {
-      const originalRow = rows[index];
-      const originalValues = originalRow
-        ? Object.values(originalRow).join(" ").toLowerCase()
-        : "";
+      const originalValues = Object.values(originalRow).join(" ").toLowerCase();
       if (!originalValues.includes(record.data_source.toLowerCase())) {
         record.data_source = "";
       }
@@ -66,12 +75,12 @@ export function validateAndEnforceRecords(
     validRecords.push(record);
   });
 
-  return validRecords;
+  return { validRecords, skipped };
 }
 
 export async function extractCrmRecords(
   rows: Record<string, string>[]
-): Promise<{ records: CrmRecord[]; skippedCount: number }> {
+): Promise<{ records: CrmRecord[]; skipped: SkippedRecord[] }> {
   const userPrompt = `Here are the raw CSV rows:\n${JSON.stringify(rows)}`;
 
   const cerebrasResponse = await fetch("https://api.cerebras.ai/v1/chat/completions", {
@@ -114,10 +123,10 @@ export async function extractCrmRecords(
     throw new Error("AI response was not a JSON array");
   }
 
-  const validRecords = validateAndEnforceRecords(parsed, rows);
+  const { validRecords, skipped } = validateAndEnforceRecords(parsed, rows);
 
-  return {
-    records: validRecords,
-    skippedCount: rows.length - validRecords.length,
-  };
+    return {
+      records: validRecords,
+      skipped,
+    };
 }

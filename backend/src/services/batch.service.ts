@@ -1,4 +1,4 @@
-import { extractCrmRecords } from "./ai.service";
+import { extractCrmRecords, SkippedRecord } from "./ai.service";
 import { CrmRecord } from "../schemas/crmRecord.schema";
 
 const BATCH_SIZE = 15;
@@ -28,7 +28,7 @@ function extractRetryDelaySeconds(errorMessage: string): number | null {
 export async function processBatches(rows: Record<string, string>[], jobId?: string) {
   const batches = chunkArray(rows, BATCH_SIZE);
   const allRecords: CrmRecord[] = [];
-  let totalSkipped = 0;
+  const allSkipped: SkippedRecord[] = [];
   let failedBatches = 0;
 
   if (jobId) {
@@ -42,9 +42,9 @@ export async function processBatches(rows: Record<string, string>[], jobId?: str
 
     while (attempt < MAX_RETRIES && !success) {
       try {
-        const { records, skippedCount } = await extractCrmRecords(batch);
+        const { records, skipped } = await extractCrmRecords(batch);
         allRecords.push(...records);
-        totalSkipped += skippedCount;
+        allSkipped.push(...skipped);
         success = true;
       } catch (err) {
         attempt++;
@@ -53,7 +53,9 @@ export async function processBatches(rows: Record<string, string>[], jobId?: str
 
         if (attempt >= MAX_RETRIES) {
           failedBatches++;
-          totalSkipped += batch.length;
+          batch.forEach((row) =>
+            allSkipped.push({ row, reason: "AI processing failed after retries" })
+          );
         } else {
           const retryDelay = extractRetryDelaySeconds(message);
           const waitMs = retryDelay ? (retryDelay + 1) * 1000 : 8000 * attempt;
@@ -80,7 +82,8 @@ export async function processBatches(rows: Record<string, string>[], jobId?: str
   return {
     imported: allRecords,
     totalImported: allRecords.length,
-    totalSkipped,
+    skipped: allSkipped,
+    totalSkipped: allSkipped.length,
     failedBatches,
   };
 }

@@ -16,10 +16,17 @@ export interface CrmRecord {
   data_source: string;
   possession_time: string;
   description: string;
+  
+}
+
+export interface SkippedRecord {
+  row: Record<string, string>;
+  reason: string;
 }
 
 export interface ExtractResponse {
   imported: CrmRecord[];
+  skipped: SkippedRecord[];
   totalImported: number;
   totalSkipped: number;
   failedBatches: number;

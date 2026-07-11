@@ -1,1 +1,0 @@
-{"version":3,"file":"crmRecord.schema.d.ts","sourceRoot":"","sources":["../../src/schemas/crmRecord.schema.ts"],"names":[],"mappings":"AAAA,OAAO,EAAE,CAAC,EAAE,MAAM,KAAK,CAAC;AAExB,eAAO,MAAM,aAAa;;;;;EAKxB,CAAC;AAEH,eAAO,MAAM,cAAc;;;;;;EAMzB,CAAC;AAEH,eAAO,MAAM,eAAe;;;;;;;;;;;;;;;;;;;;;;;;;;;iBAsB1B,CAAC;AAEH,MAAM,MAAM,SAAS,GAAG,CAAC,CAAC,KAAK,CAAC,OAAO,eAAe,CAAC,CAAC"}

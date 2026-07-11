@@ -6,13 +6,14 @@ import {
   flexRender,
   createColumnHelper,
 } from "@tanstack/react-table";
-import type { CrmRecord } from "@/lib/types";
+import type { CrmRecord, SkippedRecord } from "@/lib/types";
 import { useVirtualizer } from "@tanstack/react-virtual";
 import { useMemo, useRef ,useState } from "react";
 
 
 interface ResultTableProps {
   records: CrmRecord[];
+  skipped: SkippedRecord[];
   totalImported: number;
   totalSkipped: number;
 }
@@ -36,6 +37,7 @@ function StatusPill({ status }: { status: string }) {
 
 export default function ResultTable({
   records,
+  skipped,
   totalImported,
   totalSkipped,
 }: ResultTableProps) {
@@ -106,15 +108,6 @@ export default function ResultTable({
         </div>
       </div>
 
-      <div className="flex gap-4 mb-4">
-        <div className="px-4 py-2 rounded-lg bg-green-50 dark:bg-green-950 text-green-700 dark:text-green-300 text-sm font-medium">
-          {totalImported} Imported
-        </div>
-        <div className="px-4 py-2 rounded-lg bg-red-50 dark:bg-red-950 text-red-700 dark:text-red-300 text-sm font-medium">
-          {totalSkipped} Skipped
-        </div>
-      </div>
-
       <input
         type="text"
         placeholder="Search by name, email, mobile, or company..."
@@ -172,6 +165,44 @@ export default function ResultTable({
           </table>
         </div>
       </div>
+      {skipped.length > 0 && (
+        <div className="mt-8">
+          <h3 className="text-sm font-semibold text-gray-700 dark:text-gray-200 mb-3">
+            Skipped Records ({skipped.length})
+          </h3>
+          <div className="border rounded-xl overflow-hidden">
+            <div className="overflow-auto max-h-[300px]">
+              <table className="w-full text-sm text-left border-collapse">
+                <thead className="sticky top-0 bg-gray-100 dark:bg-gray-800 z-10">
+                  <tr>
+                    <th className="px-4 py-3 font-semibold text-gray-700 dark:text-gray-200 border-b">
+                      Row Data
+                    </th>
+                    <th className="px-4 py-3 font-semibold text-gray-700 dark:text-gray-200 border-b">
+                      Reason
+                    </th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {skipped.map((item, i) => (
+                    <tr key={i} className="border-b hover:bg-gray-50 dark:hover:bg-gray-900">
+                      <td className="px-4 py-2 text-gray-600 dark:text-gray-300 text-xs">
+                        {Object.entries(item.row)
+                          .filter(([, v]) => v)
+                          .map(([k, v]) => `${k}: ${v}`)
+                          .join(", ") || "(empty row)"}
+                      </td>
+                      <td className="px-4 py-2 text-red-500 dark:text-red-400 text-xs whitespace-nowrap">
+                        {item.reason}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

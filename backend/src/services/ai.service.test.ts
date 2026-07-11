@@ -26,22 +26,24 @@ describe("validateAndEnforceRecords", () => {
   it("keeps a record with an email", () => {
     const parsed = [makeRecord({ email: "test@example.com" })];
     const rows = [{ Email: "test@example.com" }];
-    const result = validateAndEnforceRecords(parsed, rows);
-    expect(result).toHaveLength(1);
+    const { validRecords } = validateAndEnforceRecords(parsed, rows);
+    expect(validRecords).toHaveLength(1);
   });
 
   it("keeps a record with only a mobile number", () => {
     const parsed = [makeRecord({ mobile_without_country_code: "9876543210" })];
     const rows = [{ Phone: "9876543210" }];
-    const result = validateAndEnforceRecords(parsed, rows);
-    expect(result).toHaveLength(1);
+    const { validRecords } = validateAndEnforceRecords(parsed, rows);
+    expect(validRecords).toHaveLength(1);
   });
 
   it("skips a record with neither email nor mobile", () => {
     const parsed = [makeRecord({ name: "No Contact" })];
     const rows = [{ Name: "No Contact" }];
-    const result = validateAndEnforceRecords(parsed, rows);
-    expect(result).toHaveLength(0);
+    const { validRecords, skipped } = validateAndEnforceRecords(parsed, rows);
+    expect(validRecords).toHaveLength(0);
+    expect(skipped).toHaveLength(1);
+    expect(skipped[0]!.reason).toBe("No email or mobile number found");
   });
 
   it("blanks out data_source if it doesn't appear in the original row", () => {
@@ -49,8 +51,8 @@ describe("validateAndEnforceRecords", () => {
       makeRecord({ email: "a@example.com", data_source: "leads_on_demand" }),
     ];
     const rows = [{ Email: "a@example.com", Campaign: "Summer Sale" }];
-    const result = validateAndEnforceRecords(parsed, rows);
-    expect(result[0]!.data_source).toBe("");
+    const { validRecords } = validateAndEnforceRecords(parsed, rows);
+    expect(validRecords[0]!.data_source).toBe("");
   });
 
   it("keeps data_source if it genuinely appears in the original row", () => {
@@ -58,14 +60,15 @@ describe("validateAndEnforceRecords", () => {
       makeRecord({ email: "a@example.com", data_source: "eden_park" }),
     ];
     const rows = [{ Email: "a@example.com", Source: "eden_park" }];
-    const result = validateAndEnforceRecords(parsed, rows);
-    expect(result[0]!.data_source).toBe("eden_park");
+    const { validRecords } = validateAndEnforceRecords(parsed, rows);
+    expect(validRecords[0]!.data_source).toBe("eden_park");
   });
 
   it("rejects a record that fails schema validation", () => {
     const parsed = [{ invalid: "shape" }];
     const rows = [{ Email: "a@example.com" }];
-    const result = validateAndEnforceRecords(parsed, rows);
-    expect(result).toHaveLength(0);
+    const { validRecords, skipped } = validateAndEnforceRecords(parsed, rows);
+    expect(validRecords).toHaveLength(0);
+    expect(skipped).toHaveLength(1);
   });
 });
