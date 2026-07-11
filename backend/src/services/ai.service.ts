@@ -26,11 +26,11 @@ Each output object must have exactly these fields:
 RULES:
 1. If multiple emails exist in a row, use the first as "email" and append the rest to crm_note.
 2. If multiple mobile numbers exist, use the first as mobile_without_country_code and append the rest to crm_note.
-3. If a row has NEITHER an email NOR a mobile number, DO NOT include it in the output array at all — it must be skipped.
+3. Still return an object for every single input row, even if a row has neither an email nor a mobile number. Leave those fields as "" in that case — do not omit any row from the output array. Skipping decisions are handled separately, not by you.
 4. Leave a field as "" (empty string) if you cannot confidently determine it. Never invent data.
 5. Do not introduce raw line breaks inside any field value — escape them as \\n if needed.
 
-Return a JSON array, one object per valid input row, in the same order as the input.`;
+Return a JSON array with exactly one object per input row, in the same order as the input — the output array length must always match the input array length.`;
 
 export interface SkippedRecord {
   row: Record<string, string>;

@@ -165,7 +165,7 @@ export default function ResultTable({
           </table>
         </div>
       </div>
-      {skipped.length > 0 && (
+      {skipped && skipped.length > 0 && (
         <div className="mt-8">
           <h3 className="text-sm font-semibold text-gray-700 dark:text-gray-200 mb-3">
             Skipped Records ({skipped.length})
