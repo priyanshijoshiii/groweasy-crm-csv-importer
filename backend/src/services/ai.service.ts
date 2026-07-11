@@ -49,7 +49,11 @@ export function validateAndEnforceRecords(
     const validation = crmRecordSchema.safeParse(item);
 
     if (!validation.success) {
-      skipped.push({ row: originalRow, reason: "AI response did not match expected format" });
+      const firstIssue = validation.error.issues[0];
+      const reason = firstIssue
+        ? `${firstIssue.path.join(".")}: ${firstIssue.message}`
+        : "AI response did not match expected format";
+      skipped.push({ row: originalRow, reason });
       return;
     }
 
