@@ -55,6 +55,28 @@ export function validateAndEnforceRecords(
 
     const record = validation.data;
 
+    // Enforce "no raw line breaks" rule in code, not just via prompt instruction.
+    // Only applied to genuinely freeform fields — crm_status and data_source
+    // are constrained enums and can't contain line breaks by definition.
+    const freeformFields: (keyof CrmRecord)[] = [
+      "name",
+      "company",
+      "city",
+      "state",
+      "country",
+      "crm_note",
+      "possession_time",
+      "description",
+      "lead_owner",
+    ];
+    freeformFields.forEach((key) => {
+      const value = record[key];
+      if (typeof value === "string") {
+        (record as Record<string, string>)[key] = value.replace(/\r?\n/g, "\\n");
+      }
+    });
+
+
     const hasEmail = record.email && record.email.trim() !== "";
     const hasMobile =
       record.mobile_without_country_code &&
@@ -96,6 +118,7 @@ export async function extractCrmRecords(
         { role: "user", content: userPrompt },
       ],
       temperature: 0.2,
+      max_tokens: 4096,
     }),
   });
 

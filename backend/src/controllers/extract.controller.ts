@@ -9,6 +9,13 @@ export async function handleExtract(req: Request, res: Response) {
       return res.status(400).json({ error: "No CSV rows provided." });
     }
 
+    const MAX_ROWS = 1000;
+    if (rows.length > MAX_ROWS) {
+      return res.status(400).json({
+        error: `This endpoint accepts a maximum of ${MAX_ROWS} rows per request. Received ${rows.length}.`,
+      });
+    }
+
     const result = await processBatches(rows, jobId);
     return res.status(200).json(result);
   } catch (err) {
