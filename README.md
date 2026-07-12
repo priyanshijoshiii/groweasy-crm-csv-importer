@@ -66,6 +66,7 @@ Cerebras offers a genuinely free tier (no credit card) with strong throughput fo
 - `crm_status` and `data_source` must only use the allowed enum values above, or be left blank. `data_source` is additionally **cross-checked against the original row's raw values in code**. If the AI-suggested source doesn't literally appear in the source data, it's blanked out automatically, preventing hallucinated or loosely inferred matches (e.g. an ad named "Eden Park Promo" incorrectly matching `eden_park`).
 - Email fields are validated for proper format (not just presence) via Zod, so a non-empty but invalid value (e.g. a plain word instead of an email address) does not falsely count as a valid contact method.
 - Output remains valid CSV-compatible JSON: line breaks inside field values are escaped, and the model is instructed to keep output as strictly valid JSON.
+- Batching is size-aware, not just row-count-based. Batches are split further whenever accumulated field content approaches the model's practical output limit, which significantly reduces the risk of response truncation on datasets with unusually long free-text fields (verified against a real-world dataset with long, multi-value fields).
 
 ## Getting Started
 
@@ -205,7 +206,7 @@ Tested against multiple differently-shaped sample CSVs:
 - Records missing both email and mobile (correctly skipped, with reason shown)
 - Records with an invalid, non-empty email value (correctly rejected via format validation, not just presence checking)
 - A messy, realistic multi-field dataset with long text fields, to verify batching stays within token limits without truncating AI responses
-- A larger real-world dataset (~500 rows) to verify multi-batch pacing and progress tracking under free-tier API rate limits
+- A larger real-world dataset (~500 rows) to validate multi-batch pacing and progress tracking; a moderate multi-batch dataset (~50 rows across multiple batches) was confirmed processing cleanly end-to-end under current rate-limit pacing
 
 ## Bonus Features Implemented
 - [x] Drag & drop upload
@@ -221,6 +222,5 @@ Tested against multiple differently-shaped sample CSVs:
 
 ## Known Limitations
 - Very large CSVs (500+ rows) may take longer to process, since AI batches are intentionally paced to respect the free-tier LLM API's rate limits (requests-per-minute caps). The architecture supports arbitrary file sizes. Processing time scales with API constraints, not application design.
-- The `data_source` field relies on an exact literal match between the AI's suggestion and the original row's raw text, enforced in code as a safety net against LLM hallucination. This is intentionally conservative and may occasionally leave `data_source` blank in edge cases where a genuine match exists but is phrased very differently in the source data.
+- The `data_source` field relies on an exact value match (normalized for case, spacing, hyphens, and underscores) between the AI's suggestion and one of the original row's column values, enforced in code as a safety net against LLM hallucination. This correctly handles formatting variations (e.g. "Leads On Demand" vs `leads_on_demand`) while still rejecting loose or partial matches (e.g. a campaign called "Eden Park Promo" does not falsely match `eden_park`).
 - Progress tracking (`/api/extract/progress/:jobId`) uses an in-memory store on the server. This is sufficient for a single-instance deployment, but would not survive a server restart or scale correctly across multiple backend instances in a multi-host setup. A production version would use Redis or similar shared state instead.
-- Batch size and token limits are tuned for datasets with moderately long free-text fields. Extremely long individual field values across an entire batch could still approach the model's output limit; batch size can be reduced further as a mitigation if needed.
