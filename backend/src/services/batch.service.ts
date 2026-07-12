@@ -8,11 +8,35 @@ const DELAY_BETWEEN_BATCHES_MS = 4000;
 // Simple in-memory progress store, keyed by a job ID
 export const progressStore = new Map<string, { current: number; total: number; done: boolean }>();
 
-function chunkArray<T>(arr: T[], size: number): T[][] {
-  const chunks: T[][] = [];
-  for (let i = 0; i < arr.length; i += size) {
-    chunks.push(arr.slice(i, i + size));
+function chunkArrayBySize(
+  rows: Record<string, string>[],
+  maxRowsPerBatch: number,
+  maxCharsPerBatch: number
+): Record<string, string>[][] {
+  const chunks: Record<string, string>[][] = [];
+  let currentChunk: Record<string, string>[] = [];
+  let currentChars = 0;
+
+  for (const row of rows) {
+    const rowSize = JSON.stringify(row).length;
+
+    if (
+      currentChunk.length >= maxRowsPerBatch ||
+      (currentChunk.length > 0 && currentChars + rowSize > maxCharsPerBatch)
+    ) {
+      chunks.push(currentChunk);
+      currentChunk = [];
+      currentChars = 0;
+    }
+
+    currentChunk.push(row);
+    currentChars += rowSize;
   }
+
+  if (currentChunk.length > 0) {
+    chunks.push(currentChunk);
+  }
+
   return chunks;
 }
 
@@ -26,7 +50,8 @@ function extractRetryDelaySeconds(errorMessage: string): number | null {
 }
 
 export async function processBatches(rows: Record<string, string>[], jobId?: string) {
-  const batches = chunkArray(rows, BATCH_SIZE);
+  const MAX_CHARS_PER_BATCH = 4000; // roughly keeps output well under max_tokens
+  const batches = chunkArrayBySize(rows, BATCH_SIZE, MAX_CHARS_PER_BATCH);
   const allRecords: CrmRecord[] = [];
   const allSkipped: SkippedRecord[] = [];
   let failedBatches = 0;
