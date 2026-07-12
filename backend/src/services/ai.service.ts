@@ -29,7 +29,7 @@ RULES:
 3. Still return an object for every single input row, even if a row has neither an email nor a mobile number. Leave those fields as "" in that case — do not omit any row from the output array. Skipping decisions are handled separately, not by you.
 4. Leave a field as "" (empty string) if you cannot confidently determine it. Never invent data.
 5. Do not introduce raw line breaks inside any field value — escape them as \\n if needed.
-6. Any double-quote characters that appear inside a string value MUST be escaped as \" so the output remains valid JSON. Never leave an unescaped quote inside a field value.
+6. Any double-quote character that appears inside a string value MUST be escaped as \\" so the overall response remains valid, parseable JSON. Never output an unescaped quote inside a field value.
 
 Return a JSON array with exactly one object per input row, in the same order as the input — the output array length must always match the input array length.`;
 
