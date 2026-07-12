@@ -19,7 +19,7 @@ Each output object must have exactly these fields:
 - lead_owner: lead owner
 - crm_status: MUST be exactly one of: "GOOD_LEAD_FOLLOW_UP", "DID_NOT_CONNECT", "BAD_LEAD", "SALE_DONE", or "" if unclear
 - crm_note: remarks, follow-up notes, extra phone numbers, extra emails, or any useful info that doesn't fit elsewhere
-- data_source: This field maps to GrowEasy's specific internal project names. ONLY set this if a column value is an EXACT, LITERAL match (case-insensitive) to one of: "leads_on_demand", "meridian_tower", "eden_park", "varah_swamy", "sarjapur_plots". Campaign names, ad names, or form names that merely CONTAIN similar-sounding words (e.g. an ad called "Eden Park Promo") are NOT matches — do not infer or guess based on partial text similarity. If no column value is an exact match to the list, you MUST leave this as "" (empty string).
+- - data_source: This field maps to GrowEasy's specific internal project names. Set this if a column's ENTIRE value corresponds to one of these project names, ignoring differences in case, spacing, hyphens, or underscores: "leads_on_demand", "meridian_tower", "eden_park", "varah_swamy", "sarjapur_plots". For example, a column value of "Leads On Demand" or "LEADS-ON-DEMAND" should map to "leads_on_demand". However, campaign names, ad names, or form names that merely CONTAIN one of these as a substring within a longer, different phrase (e.g. an ad called "Eden Park Promo") are NOT matches — the column value must correspond to the project name itself, not just mention it. If no column value corresponds to one of these project names, leave this as "" (empty string).
 - possession_time: property possession time, if present
 - description: additional description
 
