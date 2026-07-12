@@ -22,9 +22,9 @@ export const crmRecordSchema = z.object({
   .string()
   .optional()
   .default("")
-  .refine((val) => val === "" || z.string().email().safeParse(val).success, {
-    message: "Invalid email format",
-  }),
+  .transform((val) =>
+    val === "" || z.string().email().safeParse(val).success ? val : ""
+  ),
   country_code: z.string().optional().default(""),
   mobile_without_country_code: z.string().optional().default(""),
   company: z.string().optional().default(""),
