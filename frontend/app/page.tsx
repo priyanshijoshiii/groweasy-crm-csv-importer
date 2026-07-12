@@ -6,7 +6,7 @@ import PreviewTable from "@/components/PreviewTable";
 import ResultTable from "@/components/ResultTable";
 import { extractCrmRecords, getProgress } from "@/lib/api";
 import type { CsvRow, ExtractResponse } from "@/lib/types";
-
+import Logo from "@/components/Logo";
 
 
 export default function Home() {
@@ -90,10 +90,13 @@ export default function Home() {
         </button>
       </div>
       <div className="text-center mb-10">
-        <h1 className="text-3xl font-bold text-gray-800 dark:text-gray-100">
-          GrowEasy CRM CSV Importer
+        <div className="flex justify-center mb-4">
+          <Logo />
+        </div>
+        <h1 className="text-2xl font-semibold text-gray-800 dark:text-gray-100">
+          CRM CSV Importer
         </h1>
-        <p className="text-gray-500 dark:text-gray-400 mt-2">
+        <p className="text-gray-500 dark:text-gray-400 mt-2 text-sm">
           Upload any CSV — our AI maps it into your CRM format automatically.
         </p>
       </div>

@@ -5,10 +5,15 @@
 :root {
   --background: #ffffff;
   --foreground: #171717;
+  --accent: #F2994A;
+  --accent-hover: #E08838;
 }
+
 .dark {
   --background: #0a0a0a;
   --foreground: #ededed;
+  --accent: #F2994A;
+  --accent-hover: #E08838;
 }
 
 @theme inline {
