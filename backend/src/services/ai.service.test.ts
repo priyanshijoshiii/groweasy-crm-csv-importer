@@ -71,4 +71,13 @@ describe("validateAndEnforceRecords", () => {
     expect(validRecords).toHaveLength(0);
     expect(skipped).toHaveLength(1);
   });
+
+  it("rejects a record with a non-empty but invalid email format", () => {
+    const parsed = [makeRecord({ email: "notanemail" })];
+    const rows = [{ Email: "notanemail" }];
+    const { validRecords, skipped } = validateAndEnforceRecords(parsed, rows);
+    expect(validRecords).toHaveLength(0);
+    expect(skipped).toHaveLength(1);
+    expect(skipped[0]!.reason).toContain("email");
+  });
 });
