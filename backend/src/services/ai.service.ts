@@ -93,11 +93,14 @@ export function validateAndEnforceRecords(
     }
 
     if (record.data_source) {
-      const originalValues = Object.values(originalRow).join(" ").toLowerCase();
-      if (!originalValues.includes(record.data_source.toLowerCase())) {
-        record.data_source = "";
-      }
-    }
+          const normalize = (s: string) => s.toLowerCase().replace(/[\s_-]+/g, "");
+          const normalizedSource = normalize(record.data_source);
+          const columnValues = Object.values(originalRow).map((v) => normalize(String(v)));
+          const isExactMatch = columnValues.includes(normalizedSource);
+          if (!isExactMatch) {
+            record.data_source = "";
+          }
+        }
 
     validRecords.push(record);
   });
