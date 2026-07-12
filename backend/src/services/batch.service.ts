@@ -1,7 +1,7 @@
 import { extractCrmRecords, SkippedRecord } from "./ai.service";
 import { CrmRecord } from "../schemas/crmRecord.schema";
 
-const BATCH_SIZE = 15;
+const BATCH_SIZE = 8;
 const MAX_RETRIES = 4;
 const DELAY_BETWEEN_BATCHES_MS = 4000;
 

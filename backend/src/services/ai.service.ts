@@ -123,7 +123,7 @@ export async function extractCrmRecords(
         { role: "user", content: userPrompt },
       ],
       temperature: 0.2,
-      max_tokens: 4096,
+      max_tokens: 8192,
     }),
   });
 
