@@ -7,6 +7,8 @@ import rateLimit from "express-rate-limit";
 dotenv.config();
 
 const app = express();
+app.set("trust proxy", 1); // trust first proxy hop (Railway/Render/etc sit in front of you)
+
 const PORT = process.env.PORT || 5000;
 
 app.use(cors());
